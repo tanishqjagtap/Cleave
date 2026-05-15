@@ -8,7 +8,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float rotationSpeed = 10f;
 
     [Header("Jump")]
-    [SerializeField] private float jumpForce = 7f;
+    [SerializeField] private float jumpForce = 5f;
     [SerializeField] private float fallMultiplier = 2.5f;
     [SerializeField] private float lowJumpMultiplier = 2f;
 
@@ -17,10 +17,12 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float groundCheckRadius = 0.3f;
 
     [Header("Dash")]
-    [SerializeField] private float dashForce = 7f;
+    [SerializeField] private float dashForce = 8f;
     [SerializeField] private float dashCooldown = 1f;
+    [SerializeField] private float dashDuration = 0.15f;
 
     private Rigidbody rb;
+    private Animator animator;
 
     private Vector3 movementInput;
 
@@ -30,6 +32,8 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+
+        animator = GetComponentInChildren<Animator>();
     }
 
     private void Update()
@@ -38,6 +42,7 @@ public class PlayerController : MonoBehaviour
         RotatePlayer();
         HandleJump();
         HandleDash();
+        UpdateAnimations();
     }
 
     private void FixedUpdate()
@@ -51,7 +56,8 @@ public class PlayerController : MonoBehaviour
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 
-        movementInput = new Vector3(horizontal, 0f, vertical).normalized;
+        movementInput =
+            new Vector3(horizontal, 0f, vertical).normalized;
     }
 
     private void MovePlayer()
@@ -132,6 +138,8 @@ public class PlayerController : MonoBehaviour
             ? movementInput
             : transform.forward;
 
+        Vector3 originalVelocity = rb.linearVelocity;
+
         rb.linearVelocity = Vector3.zero;
 
         rb.AddForce(
@@ -139,7 +147,7 @@ public class PlayerController : MonoBehaviour
             ForceMode.VelocityChange
         );
 
-        yield return new WaitForSeconds(0.15f);
+        yield return new WaitForSeconds(dashDuration);
 
         rb.linearVelocity = new Vector3(
             0f,
@@ -158,6 +166,35 @@ public class PlayerController : MonoBehaviour
             groundCheck.position,
             groundCheckRadius,
             groundLayer
+        );
+    }
+
+    private void UpdateAnimations()
+    {
+        if (animator == null)
+            return;
+
+        animator.SetFloat(
+            "Speed",
+            movementInput.magnitude
+        );
+
+        animator.SetBool(
+            "IsGrounded",
+            isGrounded
+        );
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (groundCheck == null)
+            return;
+
+        Gizmos.color = Color.green;
+
+        Gizmos.DrawWireSphere(
+            groundCheck.position,
+            groundCheckRadius
         );
     }
 }
