@@ -4,7 +4,8 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
-    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float walkSpeed = 5f;
+    [SerializeField] private float sprintSpeed = 9f;
     [SerializeField] private float rotationSpeed = 10f;
 
     [Header("Jump")]
@@ -12,14 +13,15 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float fallMultiplier = 2.5f;
     [SerializeField] private float lowJumpMultiplier = 2f;
 
+    [Header("Ground Check")]
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private Transform groundCheck;
     [SerializeField] private float groundCheckRadius = 0.3f;
 
-    [Header("Dash")]
-    [SerializeField] private float dashForce = 8f;
-    [SerializeField] private float dashCooldown = 1f;
-    [SerializeField] private float dashDuration = 0.15f;
+    [Header("Slide")]
+    [SerializeField] private float slideForce = 8f;
+    [SerializeField] private float slideDuration = 0.3f;
+    [SerializeField] private float slideCooldown = 1f;
 
     private Rigidbody rb;
     private Animator animator;
@@ -27,21 +29,28 @@ public class PlayerController : MonoBehaviour
     private Vector3 movementInput;
 
     private bool isGrounded;
-    private bool canDash = true;
+    private bool isSliding;
+    private bool isSprinting;
+    private bool canSlide = true;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-
         animator = GetComponentInChildren<Animator>();
     }
 
     private void Update()
     {
         GatherInput();
+
+        CheckGround();
+
         RotatePlayer();
+
         HandleJump();
-        HandleDash();
+
+        HandleSlide();
+
         UpdateAnimations();
     }
 
@@ -58,12 +67,24 @@ public class PlayerController : MonoBehaviour
 
         movementInput =
             new Vector3(horizontal, 0f, vertical).normalized;
+
+        isSprinting =
+            Input.GetKey(KeyCode.LeftShift) &&
+            movementInput != Vector3.zero;
     }
 
     private void MovePlayer()
     {
+        if (isSliding)
+            return;
+
+        float currentSpeed =
+            isSprinting ? sprintSpeed : walkSpeed;
+
         Vector3 movement =
-            movementInput * moveSpeed * Time.fixedDeltaTime;
+            movementInput *
+            currentSpeed *
+            Time.fixedDeltaTime;
 
         rb.MovePosition(rb.position + movement);
     }
@@ -85,8 +106,6 @@ public class PlayerController : MonoBehaviour
 
     private void HandleJump()
     {
-        CheckGround();
-
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
             rb.linearVelocity = new Vector3(
@@ -106,48 +125,44 @@ public class PlayerController : MonoBehaviour
     {
         if (rb.linearVelocity.y < 0)
         {
-            rb.linearVelocity += Vector3.up *
+            rb.linearVelocity +=
+                Vector3.up *
                 Physics.gravity.y *
                 (fallMultiplier - 1) *
                 Time.fixedDeltaTime;
         }
-        else if (rb.linearVelocity.y > 0 &&
-                 !Input.GetKey(KeyCode.Space))
+        else if (
+            rb.linearVelocity.y > 0 &&
+            !Input.GetKey(KeyCode.Space)
+        )
         {
-            rb.linearVelocity += Vector3.up *
+            rb.linearVelocity +=
+                Vector3.up *
                 Physics.gravity.y *
                 (lowJumpMultiplier - 1) *
                 Time.fixedDeltaTime;
         }
     }
 
-    private void HandleDash()
+    private void HandleSlide()
     {
-        if (Input.GetKeyDown(KeyCode.LeftShift) && canDash)
+        if (
+            Input.GetKeyDown(KeyCode.LeftControl) &&
+            canSlide &&
+            isGrounded &&
+            movementInput != Vector3.zero
+        )
         {
-            StartCoroutine(DashCoroutine());
+            StartCoroutine(SlideCoroutine());
         }
     }
 
-    private System.Collections.IEnumerator DashCoroutine()
+    private System.Collections.IEnumerator SlideCoroutine()
     {
-        canDash = false;
+        canSlide = false;
+        isSliding = true;
 
-        Vector3 dashDirection =
-            movementInput != Vector3.zero
-            ? movementInput
-            : transform.forward;
-
-        Vector3 originalVelocity = rb.linearVelocity;
-
-        rb.linearVelocity = Vector3.zero;
-
-        rb.AddForce(
-            dashDirection * dashForce,
-            ForceMode.VelocityChange
-        );
-
-        yield return new WaitForSeconds(dashDuration);
+        Vector3 slideDirection = transform.forward;
 
         rb.linearVelocity = new Vector3(
             0f,
@@ -155,9 +170,18 @@ public class PlayerController : MonoBehaviour
             0f
         );
 
-        yield return new WaitForSeconds(dashCooldown);
+        rb.AddForce(
+            slideDirection * slideForce,
+            ForceMode.VelocityChange
+        );
 
-        canDash = true;
+        yield return new WaitForSeconds(slideDuration);
+
+        isSliding = false;
+
+        yield return new WaitForSeconds(slideCooldown);
+
+        canSlide = true;
     }
 
     private void CheckGround()
@@ -182,6 +206,16 @@ public class PlayerController : MonoBehaviour
         animator.SetBool(
             "IsGrounded",
             isGrounded
+        );
+
+        animator.SetBool(
+            "IsSliding",
+            isSliding
+        );
+
+        animator.SetBool(
+            "IsSprinting",
+            isSprinting
         );
     }
 
