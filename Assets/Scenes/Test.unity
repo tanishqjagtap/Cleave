@@ -265,7 +265,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   walkSpeed: 3
-  sprintSpeed: 7
+  sprintSpeed: 6
   acceleration: 23
   deceleration: 15
   rotationSpeed: 10
@@ -277,8 +277,8 @@ MonoBehaviour:
     m_Bits: 8
   groundCheck: {fileID: 1161919846}
   groundCheckRadius: 0.3
-  slideForce: 6
-  slideDuration: 0.3
+  slideForce: 10
+  slideDuration: 0.8
   slideCooldown: 1
 --- !u!54 &153312702
 Rigidbody:
