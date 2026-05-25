@@ -22,7 +22,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float groundCheckRadius = 0.3f;
 
     [Header("Slide")]
-    [SerializeField] private float slideForce = 14f;
+    [SerializeField] private float slideForce = 16f;
     [SerializeField] private float slideDuration = 0.55f;
     [SerializeField] private float slideCooldown = 0.8f;
 
@@ -34,6 +34,7 @@ public class PlayerController : MonoBehaviour
     private bool isGrounded;
     private bool isSliding;
     private bool isSprinting;
+    private bool wasSprinting;
     private bool canSlide = true;
 
     private static readonly int AnimSpeed =
@@ -51,9 +52,13 @@ public class PlayerController : MonoBehaviour
     private static readonly int AnimJump =
         Animator.StringToHash("Jump");
 
+    private static readonly int AnimRunStop =
+        Animator.StringToHash("RunStop");
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+
         animator = GetComponentInChildren<Animator>();
 
         rb.freezeRotation = true;
@@ -75,6 +80,8 @@ public class PlayerController : MonoBehaviour
 
         HandleSlide();
 
+        HandleRunStop();
+
         UpdateAnimations();
     }
 
@@ -92,6 +99,8 @@ public class PlayerController : MonoBehaviour
 
         movementInput =
             new Vector3(h, 0f, v).normalized;
+
+        wasSprinting = isSprinting;
 
         isSprinting =
             Input.GetKey(KeyCode.LeftShift) &&
@@ -160,6 +169,7 @@ public class PlayerController : MonoBehaviour
         if (
             Input.GetKeyDown(KeyCode.Space)
             && isGrounded
+            && !isSliding
         )
         {
             rb.linearVelocity =
@@ -174,8 +184,13 @@ public class PlayerController : MonoBehaviour
                 ForceMode.Impulse
             );
 
-            // THIS WAS MISSING
-            animator.SetTrigger(AnimJump);
+            animator.ResetTrigger(
+                AnimJump
+            );
+
+            animator.SetTrigger(
+                AnimJump
+            );
         }
     }
 
@@ -208,7 +223,7 @@ public class PlayerController : MonoBehaviour
             Input.GetKeyDown(KeyCode.LeftControl)
             && canSlide
             && isGrounded
-            && movementInput != Vector3.zero
+            && isSprinting
         )
         {
             StartCoroutine(
@@ -220,6 +235,7 @@ public class PlayerController : MonoBehaviour
     private IEnumerator SlideCoroutine()
     {
         canSlide = false;
+
         isSliding = true;
 
         Vector3 slideDir =
@@ -248,6 +264,22 @@ public class PlayerController : MonoBehaviour
         );
 
         canSlide = true;
+    }
+
+    private void HandleRunStop()
+    {
+        if (
+            wasSprinting &&
+            !isSprinting &&
+            movementInput == Vector3.zero &&
+            isGrounded &&
+            !isSliding
+        )
+        {
+            animator.SetTrigger(
+                AnimRunStop
+            );
+        }
     }
 
     private void CheckGround()
