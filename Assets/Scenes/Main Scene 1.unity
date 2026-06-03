@@ -4177,7 +4177,7 @@ GameObject:
   - component: {fileID: 923712844}
   - component: {fileID: 923712843}
   m_Layer: 5
-  m_Name: Slide Input field
+  m_Name: Sprint Input field
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6987,6 +6987,7 @@ MonoBehaviour:
   leftField: {fileID: 758698077}
   rightField: {fileID: 339625869}
   jumpField: {fileID: 1750974527}
+  sprintField: {fileID: 923712843}
   slideField: {fileID: 62514578}
 --- !u!4 &1549938522
 Transform:

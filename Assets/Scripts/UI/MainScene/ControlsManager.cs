@@ -10,10 +10,11 @@ public class ControlsManager : MonoBehaviour
     public TMP_InputField leftField;
     public TMP_InputField rightField;
     public TMP_InputField jumpField;
+    public TMP_InputField sprintField;
     public TMP_InputField slideField;
 
     private TMP_InputField listeningField = null;
-    private string previousKey = ""; // store key BEFORE we show "..."
+    private string previousKey = "";
 
     private void Awake()
     {
@@ -23,7 +24,7 @@ public class ControlsManager : MonoBehaviour
     public void StartListening(TMP_InputField field)
     {
         listeningField = field;
-        previousKey = field.text; // save current key before overwriting
+        previousKey = field.text;
         field.text = "...";
     }
 
@@ -53,19 +54,40 @@ public class ControlsManager : MonoBehaviour
         TMP_InputField[] allFields =
         {
             forwardField, backwardField, leftField,
-            rightField, jumpField, slideField
+            rightField, jumpField, sprintField, slideField
         };
 
-        // If another field already has this key, give it our previous key
         foreach (TMP_InputField field in allFields)
         {
-            if (field != changedField && field.text == newKey)
+            if (field != changedField &&
+                string.Equals(field.text, newKey, System.StringComparison.OrdinalIgnoreCase))
             {
-                field.text = previousKey; // swap with the saved previous key
+                field.text = previousKey;
                 break;
             }
         }
 
         changedField.text = newKey;
+    }
+
+    // Convert KeyCode name to the format Input.GetKey(string) understands
+    public static bool GetKey(string keyCodeName)
+    {
+        try
+        {
+            KeyCode code = (KeyCode)System.Enum.Parse(typeof(KeyCode), keyCodeName, true);
+            return Input.GetKey(code);
+        }
+        catch { return false; }
+    }
+
+    public static bool GetKeyDown(string keyCodeName)
+    {
+        try
+        {
+            KeyCode code = (KeyCode)System.Enum.Parse(typeof(KeyCode), keyCodeName, true);
+            return Input.GetKeyDown(code);
+        }
+        catch { return false; }
     }
 }
