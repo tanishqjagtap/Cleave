@@ -35,6 +35,15 @@ public class PlayerController : MonoBehaviour
     private bool wasSprinting;
     private bool canSlide = true;
 
+    // Cached keybinds with defaults
+    private string keyForward = "W";
+    private string keyBackward = "S";
+    private string keyLeft = "A";
+    private string keyRight = "D";
+    private string keyJump = "Space";
+    private string keySprint = "LeftShift";
+    private string keySlide = "LeftControl";
+
     private static readonly int AnimSpeed = Animator.StringToHash("Speed");
     private static readonly int AnimGrounded = Animator.StringToHash("IsGrounded");
     private static readonly int AnimSliding = Animator.StringToHash("IsSliding");
@@ -53,6 +62,7 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        RefreshKeybinds();
         GatherInput();
         CheckGround();
         HandleJump();
@@ -67,32 +77,34 @@ public class PlayerController : MonoBehaviour
         BetterJump();
     }
 
-    private void GatherInput()
+    // Pull latest keybinds from ControlsManager if available
+    private void RefreshKeybinds()
     {
         var cm = ControlsManager.Instance;
+        if (cm == null) return;
 
+        if (cm.forwardField != null) keyForward = cm.forwardField.text;
+        if (cm.backwardField != null) keyBackward = cm.backwardField.text;
+        if (cm.leftField != null) keyLeft = cm.leftField.text;
+        if (cm.rightField != null) keyRight = cm.rightField.text;
+        if (cm.jumpField != null) keyJump = cm.jumpField.text;
+        if (cm.sprintField != null) keySprint = cm.sprintField.text;
+        if (cm.slideField != null) keySlide = cm.slideField.text;
+    }
+
+    private void GatherInput()
+    {
         float h = 0f;
         float v = 0f;
 
-        if (cm != null)
-        {
-            if (ControlsManager.GetKey(cm.forwardField.text)) v += 1f;
-            if (ControlsManager.GetKey(cm.backwardField.text)) v -= 1f;
-            if (ControlsManager.GetKey(cm.leftField.text)) h -= 1f;
-            if (ControlsManager.GetKey(cm.rightField.text)) h += 1f;
-        }
-        else
-        {
-            h = Input.GetAxisRaw("Horizontal");
-            v = Input.GetAxisRaw("Vertical");
-        }
+        if (ControlsManager.GetKey(keyForward)) v += 1f;
+        if (ControlsManager.GetKey(keyBackward)) v -= 1f;
+        if (ControlsManager.GetKey(keyLeft)) h -= 1f;
+        if (ControlsManager.GetKey(keyRight)) h += 1f;
 
         movementInput = new Vector3(h, 0f, v).normalized;
         wasSprinting = isSprinting;
-
-        isSprinting = cm != null
-            ? ControlsManager.GetKey(cm.sprintField.text) && movementInput != Vector3.zero
-            : Input.GetKey(KeyCode.LeftShift) && movementInput != Vector3.zero;
+        isSprinting = ControlsManager.GetKey(keySprint) && movementInput != Vector3.zero;
     }
 
     private void MovePlayer()
@@ -118,12 +130,7 @@ public class PlayerController : MonoBehaviour
 
     private void HandleJump()
     {
-        var cm = ControlsManager.Instance;
-        bool jumpPressed = cm != null
-            ? ControlsManager.GetKeyDown(cm.jumpField.text)
-            : Input.GetKeyDown(KeyCode.Space);
-
-        if (jumpPressed && isGrounded && !isSliding)
+        if (ControlsManager.GetKeyDown(keyJump) && isGrounded && !isSliding)
         {
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
@@ -134,10 +141,7 @@ public class PlayerController : MonoBehaviour
 
     private void BetterJump()
     {
-        var cm = ControlsManager.Instance;
-        bool jumpHeld = cm != null
-            ? ControlsManager.GetKey(cm.jumpField.text)
-            : Input.GetKey(KeyCode.Space);
+        bool jumpHeld = ControlsManager.GetKey(keyJump);
 
         if (rb.linearVelocity.y < 0f)
         {
@@ -151,12 +155,7 @@ public class PlayerController : MonoBehaviour
 
     private void HandleSlide()
     {
-        var cm = ControlsManager.Instance;
-        bool slidePressed = cm != null
-            ? ControlsManager.GetKeyDown(cm.slideField.text)
-            : Input.GetKeyDown(KeyCode.LeftControl);
-
-        if (slidePressed && canSlide && isGrounded && isSprinting)
+        if (ControlsManager.GetKeyDown(keySlide) && canSlide && isGrounded && isSprinting)
             StartCoroutine(SlideCoroutine());
     }
 
@@ -181,6 +180,7 @@ public class PlayerController : MonoBehaviour
 
     private void CheckGround()
     {
+        if (groundCheck == null) return;
         isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckRadius, groundLayer);
     }
 

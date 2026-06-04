@@ -1,13 +1,12 @@
-using UnityEngine;
-using TMPro;
+    using UnityEngine;
+    using TMPro;
 
-public class RebindButton : MonoBehaviour
-{
-    public TMP_InputField inputField;
-
-    public void StartRebind()
+    public class KeyRebindButton : MonoBehaviour
     {
-        // Let ControlsManager handle everything — saves previousKey and listens for input
-        ControlsManager.Instance.StartListening(inputField);
-    }
-}
+        public TMP_Text keyText;
+
+        public void StartRebind()
+        {
+            ControlsManager.Instance.StartListening(keyText);
+        }
+    }   

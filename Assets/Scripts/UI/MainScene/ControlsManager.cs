@@ -5,62 +5,76 @@ public class ControlsManager : MonoBehaviour
 {
     public static ControlsManager Instance;
 
-    public TMP_InputField forwardField;
-    public TMP_InputField backwardField;
-    public TMP_InputField leftField;
-    public TMP_InputField rightField;
-    public TMP_InputField jumpField;
-    public TMP_InputField sprintField;
-    public TMP_InputField slideField;
+    [Header("Keybind Text")]
+    public TMP_Text forwardField;
+    public TMP_Text backwardField;
+    public TMP_Text leftField;
+    public TMP_Text rightField;
+    public TMP_Text jumpField;
+    public TMP_Text sprintField;
+    public TMP_Text slideField;
 
-    private TMP_InputField listeningField = null;
-    private string previousKey = "";
+    private TMP_Text currentField;
+    private string previousKey;
 
     private void Awake()
     {
-        Instance = this;
+        if (Instance == null)
+            Instance = this;
+        else
+            Destroy(gameObject);
     }
 
-    public void StartListening(TMP_InputField field)
+    public void StartListening(TMP_Text field)
     {
-        listeningField = field;
+        currentField = field;
         previousKey = field.text;
         field.text = "...";
     }
 
     private void Update()
     {
-        if (listeningField == null) return;
+        if (currentField == null)
+            return;
 
-        if (Input.anyKeyDown)
+        foreach (KeyCode key in System.Enum.GetValues(typeof(KeyCode)))
         {
-            foreach (KeyCode key in System.Enum.GetValues(typeof(KeyCode)))
+            if (Input.GetKeyDown(key))
             {
-                if (Input.GetKeyDown(key))
-                {
-                    if (key == KeyCode.Escape || key == KeyCode.Mouse0 ||
-                        key == KeyCode.Mouse1 || key == KeyCode.Mouse2) break;
+                if (key == KeyCode.Mouse0 ||
+                    key == KeyCode.Mouse1 ||
+                    key == KeyCode.Mouse2)
+                    return;
 
-                    AssignKey(listeningField, key.ToString());
-                    listeningField = null;
-                    break;
-                }
+                string newKey = key.ToString();
+
+                AssignKey(currentField, newKey);
+
+                currentField = null;
+                break;
             }
         }
     }
 
-    public void AssignKey(TMP_InputField changedField, string newKey)
+    private void AssignKey(TMP_Text changedField, string newKey)
     {
-        TMP_InputField[] allFields =
+        TMP_Text[] allFields =
         {
-            forwardField, backwardField, leftField,
-            rightField, jumpField, sprintField, slideField
+            forwardField,
+            backwardField,
+            leftField,
+            rightField,
+            jumpField,
+            sprintField,
+            slideField
         };
 
-        foreach (TMP_InputField field in allFields)
+        foreach (TMP_Text field in allFields)
         {
-            if (field != changedField &&
-                string.Equals(field.text, newKey, System.StringComparison.OrdinalIgnoreCase))
+            if (field == changedField)
+                continue;
+
+            if (field.text.ToUpper() == newKey.ToUpper())
             {
                 field.text = previousKey;
                 break;
@@ -70,24 +84,33 @@ public class ControlsManager : MonoBehaviour
         changedField.text = newKey;
     }
 
-    // Convert KeyCode name to the format Input.GetKey(string) understands
-    public static bool GetKey(string keyCodeName)
+    public static bool GetKey(string keyName)
     {
         try
         {
-            KeyCode code = (KeyCode)System.Enum.Parse(typeof(KeyCode), keyCodeName, true);
+            KeyCode code =
+                (KeyCode)System.Enum.Parse(typeof(KeyCode), keyName, true);
+
             return Input.GetKey(code);
         }
-        catch { return false; }
+        catch
+        {
+            return false;
+        }
     }
 
-    public static bool GetKeyDown(string keyCodeName)
+    public static bool GetKeyDown(string keyName)
     {
         try
         {
-            KeyCode code = (KeyCode)System.Enum.Parse(typeof(KeyCode), keyCodeName, true);
+            KeyCode code =
+                (KeyCode)System.Enum.Parse(typeof(KeyCode), keyName, true);
+
             return Input.GetKeyDown(code);
         }
-        catch { return false; }
+        catch
+        {
+            return false;
+        }
     }
 }
