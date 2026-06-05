@@ -61,6 +61,7 @@
     <Compile Include="Assets\Scripts\UI\MainScene\KeyRebindButton.cs" />
     <Compile Include="Assets\Scripts\UI\Intro Menu\ButtonHover.cs" />
     <Compile Include="Assets\Scripts\UI\Intro Menu\SettingsArrow.cs" />
+    <Compile Include="Assets\Scripts\UI\Intro Menu\LoadingManager.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerInputHandler.cs" />
   </ItemGroup>
   <ItemGroup>
