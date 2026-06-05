@@ -26,6 +26,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float slideDuration = 0.55f;
     [SerializeField] private float slideCooldown = 0.8f;
 
+
     private Rigidbody rb;
     private Animator animator;
     private Vector3 movementInput;
@@ -43,6 +44,7 @@ public class PlayerController : MonoBehaviour
     private string keyJump = "Space";
     private string keySprint = "LeftShift";
     private string keySlide = "LeftControl";
+    private string keyInteract = "E";
 
     private static readonly int AnimSpeed = Animator.StringToHash("Speed");
     private static readonly int AnimGrounded = Animator.StringToHash("IsGrounded");
@@ -67,6 +69,7 @@ public class PlayerController : MonoBehaviour
         CheckGround();
         HandleJump();
         HandleSlide();
+        HandleInteract();
         HandleRunStop();
         UpdateAnimations();
     }
@@ -90,6 +93,7 @@ public class PlayerController : MonoBehaviour
         if (cm.jumpField != null) keyJump = cm.jumpField.text;
         if (cm.sprintField != null) keySprint = cm.sprintField.text;
         if (cm.slideField != null) keySlide = cm.slideField.text;
+        if (cm.interactField != null) keyInteract = cm.interactField.text;
     }
 
     private void GatherInput()
@@ -157,6 +161,13 @@ public class PlayerController : MonoBehaviour
     {
         if (ControlsManager.GetKeyDown(keySlide) && canSlide && isGrounded && isSprinting)
             StartCoroutine(SlideCoroutine());
+    }
+    private void HandleInteract()
+    {
+        if (ControlsManager.GetKeyDown(keyInteract))
+        {
+            Debug.Log("Interact Pressed");
+        }
     }
 
     private IEnumerator SlideCoroutine()

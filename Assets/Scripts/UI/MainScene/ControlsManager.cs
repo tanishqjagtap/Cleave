@@ -13,6 +13,7 @@ public class ControlsManager : MonoBehaviour
     public TMP_Text jumpField;
     public TMP_Text sprintField;
     public TMP_Text slideField;
+    public TMP_Text interactField;
 
     private TMP_Text currentField;
     private string previousKey;
@@ -66,7 +67,8 @@ public class ControlsManager : MonoBehaviour
             rightField,
             jumpField,
             sprintField,
-            slideField
+            slideField,
+            interactField
         };
 
         foreach (TMP_Text field in allFields)
