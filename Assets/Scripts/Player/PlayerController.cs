@@ -127,8 +127,26 @@ public class PlayerController : MonoBehaviour
 
         if (movementInput != Vector3.zero)
         {
-            Quaternion targetRotation = Quaternion.LookRotation(movementInput);
-            rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime));
+            Camera cam = Camera.main;
+
+            Vector3 camForward = cam.transform.forward;
+            Vector3 camRight = cam.transform.right;
+
+            camForward.y = 0f;
+            camRight.y = 0f;
+
+            Vector3 moveDirection =
+                camForward.normalized * movementInput.z +
+                camRight.normalized * movementInput.x;
+
+            Quaternion targetRotation =
+                Quaternion.LookRotation(moveDirection);
+
+            rb.MoveRotation(
+                Quaternion.Slerp(
+                    rb.rotation,
+                    targetRotation,
+                    rotationSpeed * Time.fixedDeltaTime));
         }
     }
 
