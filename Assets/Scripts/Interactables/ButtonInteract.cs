@@ -41,7 +41,7 @@ public class ButtonInteract : MonoBehaviour
     IEnumerator PressButton()
     {
         Vector3 pressedPos =
-            startPos + Vector3.down * 0.1f;
+            startPos + Vector3.forward * 0.1f;
 
         while (Vector3.Distance(transform.localPosition, pressedPos) > 0.01f)
         {

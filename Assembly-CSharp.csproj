@@ -53,14 +53,15 @@
     <Compile Include="Assets\Scripts\UI\Intro Menu\MenuManager.cs" />
     <Compile Include="Assets\Scripts\Interactables\ButtonInteract.cs" />
     <Compile Include="Assets\Scripts\UI\MainScene\HoverEffect.cs" />
-    <Compile Include="Assets\Scripts\Main Scene\Systems\CheckpointManager.cs" />
     <Compile Include="Assets\Scripts\UI\MainScene\ControlsManager.cs" />
     <Compile Include="Assets\Input&amp;Graphics\PlayerInputActions.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerDistanceManager.cs" />
+    <Compile Include="Assets\Scripts\Main Scene\Systems\RespawnFade.cs" />
     <Compile Include="Assets\Scripts\Player\CameraFollow.cs" />
     <Compile Include="Assets\Scripts\UI\Intro Menu\UIButtonSound.cs" />
     <Compile Include="Assets\Scripts\Main Scene\Systems\Checkpoint.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerController.cs" />
+    <Compile Include="Assets\Scripts\Main Scene\Systems\GameManager.cs" />
     <Compile Include="Assets\Scripts\UI\MainScene\RebindButton.cs" />
     <Compile Include="Assets\Scripts\UI\MainScene\KeyRebindButton.cs" />
     <Compile Include="Assets\Scripts\Interactables\GateController.cs" />
