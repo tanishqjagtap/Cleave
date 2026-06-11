@@ -15,6 +15,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float jumpForce = 6f;
     [SerializeField] private float fallMultiplier = 2.5f;
     [SerializeField] private float lowJumpMultiplier = 2f;
+    [SerializeField] private float maxFallSpeed = 20f;
+    [SerializeField] private float coyoteTime = 0.15f;
+    [SerializeField] private float jumpBufferTime = 0.15f;
 
     [Header("Ground Check")]
     [SerializeField] private LayerMask groundLayer;
@@ -26,7 +29,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float slideDuration = 0.55f;
     [SerializeField] private float slideCooldown = 0.8f;
 
-
     private Rigidbody rb;
     private Animator animator;
     private Vector3 movementInput;
@@ -36,7 +38,9 @@ public class PlayerController : MonoBehaviour
     private bool wasSprinting;
     private bool canSlide = true;
 
-    // Cached keybinds with defaults
+    private float coyoteTimer;
+    private float jumpBufferTimer;
+
     private string keyForward = "W";
     private string keyBackward = "S";
     private string keyLeft = "A";
@@ -72,6 +76,10 @@ public class PlayerController : MonoBehaviour
         HandleInteract();
         HandleRunStop();
         UpdateAnimations();
+
+        // Tick timers
+        coyoteTimer -= Time.deltaTime;
+        jumpBufferTimer -= Time.deltaTime;
     }
 
     private void FixedUpdate()
@@ -80,12 +88,10 @@ public class PlayerController : MonoBehaviour
         BetterJump();
     }
 
-    // Pull latest keybinds from ControlsManager if available
     private void RefreshKeybinds()
     {
         var cm = ControlsManager.Instance;
         if (cm == null) return;
-
         if (cm.forwardField != null) keyForward = cm.forwardField.text;
         if (cm.backwardField != null) keyBackward = cm.backwardField.text;
         if (cm.leftField != null) keyLeft = cm.leftField.text;
@@ -98,9 +104,7 @@ public class PlayerController : MonoBehaviour
 
     private void GatherInput()
     {
-        float h = 0f;
-        float v = 0f;
-
+        float h = 0f, v = 0f;
         if (ControlsManager.GetKey(keyForward)) v += 1f;
         if (ControlsManager.GetKey(keyBackward)) v -= 1f;
         if (ControlsManager.GetKey(keyLeft)) h -= 1f;
@@ -109,53 +113,35 @@ public class PlayerController : MonoBehaviour
         movementInput = new Vector3(h, 0f, v).normalized;
         wasSprinting = isSprinting;
         isSprinting = ControlsManager.GetKey(keySprint) && movementInput != Vector3.zero;
+
+        // Jump buffer — register jump press early
+        if (ControlsManager.GetKeyDown(keyJump))
+            jumpBufferTimer = jumpBufferTime;
     }
 
-    private void MovePlayer()
+    private void CheckGround()
     {
-        if (isSliding) return;
+        if (groundCheck == null) return;
+        bool wasGrounded = isGrounded;
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckRadius, groundLayer);
 
-        float targetSpeed = isSprinting ? sprintSpeed : walkSpeed;
-        Vector3 targetVelocity = movementInput * targetSpeed;
-        Vector3 currentVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-        float moveRate = movementInput != Vector3.zero ? acceleration : deceleration;
-
-        Vector3 smoothVelocity = Vector3.MoveTowards(
-            currentVelocity, targetVelocity, moveRate * Time.fixedDeltaTime);
-
-        rb.linearVelocity = new Vector3(smoothVelocity.x, rb.linearVelocity.y, smoothVelocity.z);
-
-        if (movementInput != Vector3.zero)
-        {
-            Camera cam = Camera.main;
-
-            Vector3 camForward = cam.transform.forward;
-            Vector3 camRight = cam.transform.right;
-
-            camForward.y = 0f;
-            camRight.y = 0f;
-
-            Vector3 moveDirection =
-                camForward.normalized * movementInput.z +
-                camRight.normalized * movementInput.x;
-
-            Quaternion targetRotation =
-                Quaternion.LookRotation(moveDirection);
-
-            rb.MoveRotation(
-                Quaternion.Slerp(
-                    rb.rotation,
-                    targetRotation,
-                    rotationSpeed * Time.fixedDeltaTime));
-        }
+        // Reset coyote time when landing or while grounded
+        if (isGrounded)
+            coyoteTimer = coyoteTime;
+        else if (wasGrounded)
+            coyoteTimer = coyoteTime; // just left ground, start countdown
     }
 
     private void HandleJump()
     {
-        if (ControlsManager.GetKeyDown(keyJump) && isGrounded && !isSliding)
+        bool canJump = coyoteTimer > 0f && !isSliding;
+
+        if (jumpBufferTimer > 0f && canJump)
         {
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            jumpBufferTimer = 0f;
+            coyoteTimer = 0f;
             animator.ResetTrigger(AnimJump);
             animator.SetTrigger(AnimJump);
         }
@@ -168,10 +154,47 @@ public class PlayerController : MonoBehaviour
         if (rb.linearVelocity.y < 0f)
         {
             rb.linearVelocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1f) * Time.fixedDeltaTime;
+            // Cap fall speed
+            if (rb.linearVelocity.y < -maxFallSpeed)
+                rb.linearVelocity = new Vector3(rb.linearVelocity.x, -maxFallSpeed, rb.linearVelocity.z);
         }
         else if (rb.linearVelocity.y > 0f && !jumpHeld)
         {
             rb.linearVelocity += Vector3.up * Physics.gravity.y * (lowJumpMultiplier - 1f) * Time.fixedDeltaTime;
+        }
+    }
+
+    private void MovePlayer()
+    {
+        if (isSliding) return;
+
+        float targetSpeed = isSprinting ? sprintSpeed : walkSpeed;
+        Vector3 targetVelocity = movementInput * targetSpeed;
+        Vector3 currentVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+
+        // Use higher deceleration when changing direction for snappier feel
+        float moveRate;
+        if (movementInput == Vector3.zero)
+            moveRate = deceleration;
+        else if (Vector3.Dot(currentVelocity.normalized, targetVelocity.normalized) < 0f)
+            moveRate = deceleration * 2f; // changing direction
+        else
+            moveRate = acceleration;
+
+        Vector3 smoothVelocity = Vector3.MoveTowards(currentVelocity, targetVelocity, moveRate * Time.fixedDeltaTime);
+        rb.linearVelocity = new Vector3(smoothVelocity.x, rb.linearVelocity.y, smoothVelocity.z);
+
+        if (movementInput != Vector3.zero)
+        {
+            Camera cam = Camera.main;
+            Vector3 camForward = cam.transform.forward;
+            Vector3 camRight = cam.transform.right;
+            camForward.y = 0f;
+            camRight.y = 0f;
+
+            Vector3 moveDirection = camForward.normalized * movementInput.z + camRight.normalized * movementInput.x;
+            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+            rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime));
         }
     }
 
@@ -180,12 +203,11 @@ public class PlayerController : MonoBehaviour
         if (ControlsManager.GetKeyDown(keySlide) && canSlide && isGrounded && isSprinting)
             StartCoroutine(SlideCoroutine());
     }
+
     private void HandleInteract()
     {
         if (ControlsManager.GetKeyDown(keyInteract))
-        {
             Debug.Log("Interact Pressed");
-        }
     }
 
     private IEnumerator SlideCoroutine()
@@ -207,17 +229,11 @@ public class PlayerController : MonoBehaviour
             animator.SetTrigger(AnimRunStop);
     }
 
-    private void CheckGround()
-    {
-        if (groundCheck == null) return;
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckRadius, groundLayer);
-    }
-
     private void UpdateAnimations()
     {
         if (animator == null) return;
         Vector3 hVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-        animator.SetFloat(AnimSpeed, hVel.magnitude);
+        animator.SetFloat(AnimSpeed, hVel.magnitude, 0.1f, Time.deltaTime);
         animator.SetBool(AnimGrounded, isGrounded);
         animator.SetBool(AnimSliding, isSliding);
         animator.SetBool(AnimSprinting, isSprinting);
