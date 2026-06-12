@@ -4,12 +4,15 @@ using System.Collections;
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
 {
+    [Header("Camera")]
+    [SerializeField] private CameraOrbit cameraOrbit;
+
     [Header("Movement")]
     [SerializeField] private float walkSpeed = 4.5f;
     [SerializeField] private float sprintSpeed = 7.5f;
-    [SerializeField] private float acceleration = 20f;
-    [SerializeField] private float deceleration = 25f;
-    [SerializeField] private float rotationSpeed = 15f;
+    [SerializeField] private float acceleration = 25f;
+    [SerializeField] private float deceleration = 40f;
+    [SerializeField] private float rotationSpeed = 12f;
 
     [Header("Jump")]
     [SerializeField] private float jumpForce = 6f;
@@ -51,6 +54,8 @@ public class PlayerController : MonoBehaviour
     private string keyInteract = "E";
 
     private static readonly int AnimSpeed = Animator.StringToHash("Speed");
+    private static readonly int AnimMoveX = Animator.StringToHash("MoveX");
+    private static readonly int AnimMoveZ = Animator.StringToHash("MoveZ");
     private static readonly int AnimGrounded = Animator.StringToHash("IsGrounded");
     private static readonly int AnimSliding = Animator.StringToHash("IsSliding");
     private static readonly int AnimSprinting = Animator.StringToHash("IsSprinting");
@@ -77,7 +82,6 @@ public class PlayerController : MonoBehaviour
         HandleRunStop();
         UpdateAnimations();
 
-        // Tick timers
         coyoteTimer -= Time.deltaTime;
         jumpBufferTimer -= Time.deltaTime;
     }
@@ -85,6 +89,7 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         MovePlayer();
+        HandleRotation();
         BetterJump();
     }
 
@@ -114,9 +119,18 @@ public class PlayerController : MonoBehaviour
         wasSprinting = isSprinting;
         isSprinting = ControlsManager.GetKey(keySprint) && movementInput != Vector3.zero;
 
-        // Jump buffer — register jump press early
         if (ControlsManager.GetKeyDown(keyJump))
             jumpBufferTimer = jumpBufferTime;
+    }
+
+    private Vector3 GetCameraRelativeMoveDir()
+    {
+        if (cameraOrbit == null) return Vector3.zero;
+
+        Vector3 camForward = Quaternion.Euler(0f, cameraOrbit.yaw, 0f) * Vector3.forward;
+        Vector3 camRight = Quaternion.Euler(0f, cameraOrbit.yaw, 0f) * Vector3.right;
+
+        return (camForward * movementInput.z + camRight * movementInput.x);
     }
 
     private void CheckGround()
@@ -125,11 +139,10 @@ public class PlayerController : MonoBehaviour
         bool wasGrounded = isGrounded;
         isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckRadius, groundLayer);
 
-        // Reset coyote time when landing or while grounded
         if (isGrounded)
             coyoteTimer = coyoteTime;
         else if (wasGrounded)
-            coyoteTimer = coyoteTime; // just left ground, start countdown
+            coyoteTimer = coyoteTime;
     }
 
     private void HandleJump()
@@ -154,7 +167,6 @@ public class PlayerController : MonoBehaviour
         if (rb.linearVelocity.y < 0f)
         {
             rb.linearVelocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1f) * Time.fixedDeltaTime;
-            // Cap fall speed
             if (rb.linearVelocity.y < -maxFallSpeed)
                 rb.linearVelocity = new Vector3(rb.linearVelocity.x, -maxFallSpeed, rb.linearVelocity.z);
         }
@@ -169,33 +181,41 @@ public class PlayerController : MonoBehaviour
         if (isSliding) return;
 
         float targetSpeed = isSprinting ? sprintSpeed : walkSpeed;
-        Vector3 targetVelocity = movementInput * targetSpeed;
+
+        Vector3 moveDir = GetCameraRelativeMoveDir();
+        Vector3 targetVelocity = moveDir.normalized * targetSpeed * (movementInput == Vector3.zero ? 0f : 1f);
         Vector3 currentVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
-        // Use higher deceleration when changing direction for snappier feel
-        float moveRate;
-        if (movementInput == Vector3.zero)
-            moveRate = deceleration;
-        else if (Vector3.Dot(currentVelocity.normalized, targetVelocity.normalized) < 0f)
-            moveRate = deceleration * 2f; // changing direction
-        else
-            moveRate = acceleration;
+        float moveRate = movementInput != Vector3.zero ? acceleration : deceleration;
 
         Vector3 smoothVelocity = Vector3.MoveTowards(currentVelocity, targetVelocity, moveRate * Time.fixedDeltaTime);
+
+        if (movementInput == Vector3.zero && smoothVelocity.magnitude < 0.05f)
+            smoothVelocity = Vector3.zero;
+
         rb.linearVelocity = new Vector3(smoothVelocity.x, rb.linearVelocity.y, smoothVelocity.z);
+    }
+
+    private void HandleRotation()
+    {
+        if (cameraOrbit == null) return;
+        if (Time.timeScale == 0f) return;
+
+        Quaternion targetRotation;
 
         if (movementInput != Vector3.zero)
         {
-            Camera cam = Camera.main;
-            Vector3 camForward = cam.transform.forward;
-            Vector3 camRight = cam.transform.right;
-            camForward.y = 0f;
-            camRight.y = 0f;
-
-            Vector3 moveDirection = camForward.normalized * movementInput.z + camRight.normalized * movementInput.x;
-            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-            rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime));
+            // Face the direction of movement (camera-relative)
+            Vector3 moveDir = GetCameraRelativeMoveDir();
+            targetRotation = Quaternion.LookRotation(moveDir.normalized);
         }
+        else
+        {
+            // Idle: follow camera yaw (mouse free-look)
+            targetRotation = Quaternion.Euler(0f, cameraOrbit.yaw, 0f);
+        }
+
+        rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime));
     }
 
     private void HandleSlide()
@@ -232,8 +252,12 @@ public class PlayerController : MonoBehaviour
     private void UpdateAnimations()
     {
         if (animator == null) return;
-        Vector3 hVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-        animator.SetFloat(AnimSpeed, hVel.magnitude, 0.1f, Time.deltaTime);
+
+        Vector3 localVel = transform.InverseTransformDirection(rb.linearVelocity);
+
+        animator.SetFloat(AnimMoveX, localVel.x, 0.03f, Time.deltaTime);
+        animator.SetFloat(AnimMoveZ, localVel.z, 0.03f, Time.deltaTime);
+        animator.SetFloat(AnimSpeed, new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z).magnitude, 0.03f, Time.deltaTime);
         animator.SetBool(AnimGrounded, isGrounded);
         animator.SetBool(AnimSliding, isSliding);
         animator.SetBool(AnimSprinting, isSprinting);
@@ -244,5 +268,16 @@ public class PlayerController : MonoBehaviour
         if (groundCheck == null) return;
         Gizmos.color = isGrounded ? Color.green : Color.red;
         Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        foreach (ContactPoint contact in collision.contacts)
+        {
+            if (Vector3.Dot(contact.normal, Vector3.up) < 0.3f && rb.linearVelocity.y < 0.1f)
+            {
+                rb.position += Vector3.up * 0.02f;
+            }
+        }
     }
 }
