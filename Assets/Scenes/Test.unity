@@ -414,6 +414,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb7a73b676fca1a4fa2fe4b060a9f6c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
+  cameraOrbit: {fileID: 196473929}
   walkSpeed: 3
   sprintSpeed: 6
   acceleration: 23
@@ -422,6 +423,9 @@ MonoBehaviour:
   jumpForce: 5
   fallMultiplier: 2.5
   lowJumpMultiplier: 2
+  maxFallSpeed: 20
+  coyoteTime: 0.15
+  jumpBufferTime: 0.15
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -635,12 +639,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 196473924}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2ff6c74f9c0a0a947bbfbbee8fb353ea, type: 3}
+  m_Script: {fileID: 11500000, guid: 49192660fca2a3e43bfea3cfffa62225, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CameraFollow
+  m_EditorClassIdentifier: Assembly-CSharp::CameraOrbit
   target: {fileID: 153312704}
-  offset: {x: 0, y: 2.5, z: -3.3}
-  smoothSpeed: 10
+  distance: 5
+  height: 2
+  mouseSensitivity: 3
+  minPitch: -30
+  maxPitch: 60
+  collisionOffset: 0.2
+  minDistance: 0.5
+  yaw: 0
+  pitch: 15
 --- !u!1 &239868062
 GameObject:
   m_ObjectHideFlags: 0
@@ -1344,8 +1355,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4421c4b909768824ab0383eec06398b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PauseMenu
-  pauseMenu: {fileID: 1549788861}
-  settingsPanel: {fileID: 239868062}
 --- !u!4 &644440509
 Transform:
   m_ObjectHideFlags: 0
@@ -3832,7 +3841,7 @@ PrefabInstance:
     - target: {fileID: 5866666021909216657, guid: 383fed3eb0802d8418a5800657f204dc, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: c5dfc0b4886154d48848442e3ba734cb, type: 2}
+      objectReference: {fileID: 9100000, guid: 99ced478860f6974f9ac394ac53180d7, type: 2}
     - target: {fileID: 5866666021909216657, guid: 383fed3eb0802d8418a5800657f204dc, type: 3}
       propertyPath: m_WarningMessage
       value: 
