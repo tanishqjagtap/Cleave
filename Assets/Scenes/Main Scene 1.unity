@@ -8115,6 +8115,7 @@ GameObject:
   - component: {fileID: 1054039541}
   - component: {fileID: 1054039540}
   - component: {fileID: 1054039539}
+  - component: {fileID: 1054039543}
   m_Layer: 7
   m_Name: Maya
   m_TagString: Player
@@ -8221,6 +8222,18 @@ Transform:
   - {fileID: 867161088}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1054039543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1054039538}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a1f8a8e74e38094d993620973acc76c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDeath
 --- !u!1 &1085642142 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 4b8cdb66a56aa5349b90d79419751053, type: 3}
@@ -10094,6 +10107,7 @@ GameObject:
   - component: {fileID: 1366135128}
   - component: {fileID: 1366135127}
   - component: {fileID: 1366135126}
+  - component: {fileID: 1366135130}
   m_Layer: 7
   m_Name: Lena
   m_TagString: Player
@@ -10200,6 +10214,18 @@ Transform:
   - {fileID: 1312310147}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1366135130
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1366135125}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a1f8a8e74e38094d993620973acc76c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDeath
 --- !u!1 &1368117429 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 4b8cdb66a56aa5349b90d79419751053, type: 3}

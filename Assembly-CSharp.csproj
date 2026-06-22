@@ -54,6 +54,8 @@
     <Compile Include="Assets\Scripts\Interactables\LeverController.cs" />
     <Compile Include="Assets\Scripts\Interactables\ButtonInteract.cs" />
     <Compile Include="Assets\Scripts\UI\MainScene\HoverEffect.cs" />
+    <Compile Include="Assets\Scripts\Obstacles &amp; Traps\PlayerDeath.cs" />
+    <Compile Include="Assets\Scripts\Main Scene\Systems\CheckpointManager.cs" />
     <Compile Include="Assets\Scripts\UI\MainScene\ControlsManager.cs" />
     <Compile Include="Assets\Input&amp;Graphics\PlayerInputActions.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerDistanceManager.cs" />
