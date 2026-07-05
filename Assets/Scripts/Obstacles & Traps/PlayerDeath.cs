@@ -2,13 +2,17 @@ using UnityEngine;
 
 public class PlayerDeath : MonoBehaviour
 {
+    [Header("References")]
+    public PlayerDeath otherPlayer;
+    public Transform respawnPoint;
+
     private Animator anim;
     private Rigidbody rb;
     private PlayerController controller;
 
-    private bool isDead;
+    private bool isDead = false;
 
-    private void Start()
+    void Awake()
     {
         anim = GetComponent<Animator>();
         rb = GetComponent<Rigidbody>();
@@ -23,37 +27,63 @@ public class PlayerDeath : MonoBehaviour
         }
     }
 
-    private void Die()
+    void Die()
     {
         if (isDead) return;
 
         isDead = true;
 
-        if (controller != null)
-            controller.enabled = false;
+        // Freeze THIS player
+        controller.enabled = false;
 
-        if (rb != null)
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        rb.isKinematic = true;
+
+        anim.SetTrigger("Death");
+
+        // Freeze OTHER player
+        if (otherPlayer != null)
         {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            rb.isKinematic = true;
+            otherPlayer.StopPlayer();
         }
 
-        if (anim != null)
-            anim.SetTrigger("Death");
-
-        Invoke(nameof(Respawn), 1.5f);
+        Invoke(nameof(RespawnBoth), 1.5f);
     }
 
-    private void Respawn()
+    public void StopPlayer()
     {
-        transform.position = new Vector3(0, 1, 0); // temporary respawn point
+        controller.enabled = false;
 
-        if (rb != null)
-            rb.isKinematic = false;
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        rb.isKinematic = true;
+    }
 
-        if (controller != null)
-            controller.enabled = true;
+    void RespawnBoth()
+    {
+        Respawn();
+
+        if (otherPlayer != null)
+            otherPlayer.Respawn();
+    }
+
+    public void Respawn()
+    {
+        // Move player
+        transform.position = respawnPoint.position;
+
+        // Reset physics
+        rb.isKinematic = false;
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        // Reset animator completely
+        anim.Rebind();
+        anim.Update(0f);
+
+        // Enable movement again
+        controller.enabled = true;
 
         isDead = false;
     }

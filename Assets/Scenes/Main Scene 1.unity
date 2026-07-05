@@ -5745,6 +5745,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a1f8a8e74e38094d993620973acc76c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDeath
+  otherPlayer: {fileID: 1366135130}
+  respawnPoint: {fileID: 1921596156}
 --- !u!114 &706745598
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6428,7 +6430,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29c264b6b60fbd04da3c0bb419d545e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDistanceManager
-  maya: {fileID: 0}
+  maya: {fileID: 706745601}
   lena: {fileID: 1366135129}
   maxDistance: 20
 --- !u!4 &746511951
@@ -6458,7 +6460,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1125d633f769ce45acb174c64a3a9bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  maya: {fileID: 0}
+  maya: {fileID: 706745601}
   lena: {fileID: 1366135129}
 --- !u!1 &749127234 stripped
 GameObject:
@@ -9107,7 +9109,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LeverController
   interactDistance: 3
-  maya: {fileID: 0}
+  maya: {fileID: 706745601}
   lena: {fileID: 1366135129}
   duration: 0.5
   gate: {fileID: 1764927584}
@@ -12629,6 +12631,7 @@ GameObject:
   - component: {fileID: 1366135127}
   - component: {fileID: 1366135126}
   - component: {fileID: 1366135130}
+  - component: {fileID: 1366135131}
   m_Layer: 7
   m_Name: Lena
   m_TagString: Player
@@ -12747,6 +12750,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a1f8a8e74e38094d993620973acc76c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDeath
+  otherPlayer: {fileID: 706745597}
+  respawnPoint: {fileID: 1921596156}
+--- !u!95 &1366135131
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1366135125}
+  m_Enabled: 1
+  m_Avatar: {fileID: 9000000, guid: 6491d245c6ce7a64bab5c7d88eca6b69, type: 3}
+  m_Controller: {fileID: 9100000, guid: c5dfc0b4886154d48848442e3ba734cb, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1368117429 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 4b8cdb66a56aa5349b90d79419751053, type: 3}
