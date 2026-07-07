@@ -4,7 +4,6 @@ public class PlayerDeath : MonoBehaviour
 {
     [Header("References")]
     public PlayerDeath otherPlayer;
-    public Transform respawnPoint;
 
     private Animator anim;
     private Rigidbody rb;
@@ -35,7 +34,6 @@ public class PlayerDeath : MonoBehaviour
 
         // Freeze THIS player
         controller.enabled = false;
-
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
         rb.isKinematic = true;
@@ -44,9 +42,7 @@ public class PlayerDeath : MonoBehaviour
 
         // Freeze OTHER player
         if (otherPlayer != null)
-        {
             otherPlayer.StopPlayer();
-        }
 
         Invoke(nameof(RespawnBoth), 1.5f);
     }
@@ -62,6 +58,10 @@ public class PlayerDeath : MonoBehaviour
 
     void RespawnBoth()
     {
+        // Move BOTH players to latest checkpoint
+        Checkpoint.RespawnBoth();
+
+        // Reactivate both players
         Respawn();
 
         if (otherPlayer != null)
@@ -70,20 +70,14 @@ public class PlayerDeath : MonoBehaviour
 
     public void Respawn()
     {
-        // Move player
-        transform.position = respawnPoint.position;
-
-        // Reset physics
         rb.isKinematic = false;
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
-        // Reset animator completely
-        anim.Rebind();
-        anim.Update(0f);
-
-        // Enable movement again
         controller.enabled = true;
+
+        anim.ResetTrigger("Death");
+        anim.Play("MainIdle", 0);
 
         isDead = false;
     }

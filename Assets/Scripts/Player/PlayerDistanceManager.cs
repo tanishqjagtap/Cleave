@@ -13,14 +13,19 @@ public class PlayerDistanceManager : MonoBehaviour
 
     private void Start()
     {
+        // Register players with Checkpoint system
         Checkpoint.maya = maya;
         Checkpoint.lena = lena;
+
+        // Save their original X positions
         Checkpoint.mayaOriginalX = maya.position.x;
         Checkpoint.lenaOriginalX = lena.position.x;
-        Checkpoint.spawnZ = maya.position.z;
+
+        // Set the very first checkpoint
+        Checkpoint.SetDefaultSpawns(maya.position, lena.position);
     }
 
-    void Update()
+    private void Update()
     {
         if (maya == null || lena == null) return;
         if (isRespawning) return;
@@ -31,6 +36,7 @@ public class PlayerDistanceManager : MonoBehaviour
         {
             lastRespawnTime = Time.time;
             isRespawning = true;
+
             StartCoroutine(RespawnWithFade());
         }
     }
@@ -38,6 +44,10 @@ public class PlayerDistanceManager : MonoBehaviour
     private System.Collections.IEnumerator RespawnWithFade()
     {
         yield return StartCoroutine(RespawnFade.Instance.Fade());
+
+        // Respawn both players at the latest checkpoint
+        Checkpoint.RespawnBoth();
+
         isRespawning = false;
     }
 }
